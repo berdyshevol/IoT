@@ -28,16 +28,12 @@ void toggle(uint32_t pin) {
     vTaskDelay(100 / portTICK_PERIOD_MS);
     uint32_t state = gpio_get_level(led);
     state = state == 0 ? 1 : 0;
-    gpio_set_level(led, state);
-	printf("Toggle btn=%d Led=%d state=%d\n", pin, led, state);
-    
+    gpio_set_level(led, state);    
 }
 
 static void IRAM_ATTR gpio_isr_handler(void* arg)
 {
     uint32_t gpio_num = (uint32_t) arg;
-    // printf("In isr_handler gpio=%d", gpio_num);
-    // toggle(gpio_num);
     xQueueSendFromISR(gpio_evt_queue, &gpio_num, NULL);
 }
 
@@ -47,7 +43,6 @@ static void gpio_task_example(void* arg)
     for(;;) {
         if(xQueueReceive(gpio_evt_queue, &io_num, portMAX_DELAY)) {
             toggle(io_num);
-            // printf("GPIO[%d] intr, val: %d\n", io_num, gpio_get_level(io_num));
         }
     }
 }
@@ -72,8 +67,8 @@ void app_main()
     gpio_pad_select_gpio(GPIO_OUTPUT_IO_1);
     gpio_set_direction(GPIO_OUTPUT_IO_0, GPIO_MODE_INPUT_OUTPUT);
     gpio_set_direction(GPIO_OUTPUT_IO_1, GPIO_MODE_INPUT_OUTPUT);
-    gpio_set_level(GPIO_OUTPUT_IO_0, 1);
-    gpio_set_level(GPIO_OUTPUT_IO_1, 1);
+    gpio_set_level(GPIO_OUTPUT_IO_0, 0);
+    gpio_set_level(GPIO_OUTPUT_IO_1, 0);
 
     //interrupt of rising edge
     io_conf.intr_type = GPIO_PIN_INTR_POSEDGE;
@@ -97,14 +92,9 @@ void app_main()
     //hook isr handler for specific gpio pin
     gpio_isr_handler_add(GPIO_INPUT_IO_1, gpio_isr_handler, (void*) GPIO_INPUT_IO_1);
 
-    //remove isr handler for gpio number.
-    gpio_isr_handler_remove(GPIO_INPUT_IO_0);
-    //hook isr handler for specific gpio pin again
-    gpio_isr_handler_add(GPIO_INPUT_IO_0, gpio_isr_handler, (void*) GPIO_INPUT_IO_0);
-
-    while(1) {
-        printf("main_app %d %d\n", gpio_get_level(GPIO_OUTPUT_IO_0), gpio_get_level(GPIO_OUTPUT_IO_1));
-        vTaskDelay(1000 / portTICK_RATE_MS);
-    }
+    // while(1) {
+    //     printf("main_app %d %d\n", gpio_get_level(GPIO_OUTPUT_IO_0), gpio_get_level(GPIO_OUTPUT_IO_1));
+    //     vTaskDelay(1000 / portTICK_RATE_MS);
+    // }
 }
 
